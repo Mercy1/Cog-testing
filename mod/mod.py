@@ -54,22 +54,22 @@ class Mod(ModClass):
             for guild in muted:
                 for user in muted[guild]:
                     if datetime.fromtimestamp(muted[guild][user]["expiry"]) < datetime.now():
-                        await self.roleunmute(user, guild)
+                        await self.unmute(user, guild)
             await asyncio.sleep(15)
 
     async def roleunmute(self, user, guildid, *, moderator: discord.Member = None):
         guild = self.bot.get_guild(int(guildid))
         if guild is None:
             return
-        mutedroleid = await self.__config.guild(guild).rolemuterole()
+        mutedroleid = await self.__config.guild(guild).muterole()
         muterole = guild.get_role(mutedroleid)
         member = guild.get_member(int(user))
         if member is not None:
             if moderator is None:
-                await member.remove_roles(rolemuterole, reason="Mute expired.")
+                await member.remove_roles(muterole, reason="Mute expired.")
                 log.info("Unmuted {} in {}.".format(member, guild))
             else:
-                await member.remove_roles(rolemuterole, reason="Unmuted by {}.".format(moderator))
+                await member.remove_roles(muterole, reason="Unmuted by {}.".format(moderator))
                 log.info("Unmuted {} in {} by {}.".format(member, guild, moderator))
             await modlog.create_case(
                 self.bot,
@@ -87,16 +87,16 @@ class Mod(ModClass):
                 del muted[guildid][user]
 
     async def create_muted_role(self, guild):
-        rolemuted_role = await guild.create_role(
+        muted_role = await guild.create_role(
             name="Muted", reason="Muted role created for timed mutes."
         )
-        await self.__config.guild(guild).muterole.set(rolemuted_role.id)
+        await self.__config.guild(guild).muterole.set(muted_role.id)
         o = discord.PermissionOverwrite(send_messages=False, add_reactions=False, connect=False)
         for channel in guild.channels:
-            mr_overwrite = channel.overwrites.get(rolemuted_role)
+            mr_overwrite = channel.overwrites.get(muted_role)
             if not mr_overwrite or o != mr_overwrite:
                 await channel.set_permissions(
-                    rolemuted_role,
+                    muted_role,
                     overwrite=o,
                     reason="Ensures that Muted users won't be able to talk here.",
                 )
@@ -119,7 +119,7 @@ class Mod(ModClass):
             duration = timedelta(minutes=10)
         duration_seconds = duration.total_seconds()
         guild = ctx.guild
-        roleid = await self.__config.guild(guild).rolemuterole()
+        roleid = await self.__config.guild(guild).muterole()
         if roleid is None:
             await ctx.send(
                 "There is currently no mute role set for this server. If you would like one to be automatically setup then type yes, otherwise type no then one can be set via {}mute roleset <role>".format(
@@ -140,9 +140,9 @@ class Mod(ModClass):
                 await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
                 return
         mutedrole = guild.get_role(roleid)
-        if rolemutedrole is None:
+        if mutedrole is None:
             return await ctx.send(
-                f"The mute role for this server is invalid. Please set one up using {ctx.prefix}rolemute roleset <role>."
+                f"The mute role for this server is invalid. Please set one up using {ctx.prefix}mute roleset <role>."
             )
         completed = []
         failed = []
@@ -166,7 +166,7 @@ class Mod(ModClass):
                     )
                     continue
                 await user.add_roles(
-                    rolemutedrole,
+                    mutedrole,
                     reason="Muted by {} for {}{}".format(
                         ctx.author,
                         humanize_timedelta(timedelta=duration),
