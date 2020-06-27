@@ -48,7 +48,7 @@ class Mod(ModClass):
     def cog_unload(self):
         self.loop.cancel()
 
-    async def roleunmute_loop(self):
+    async def unmute_loop(self):
         while True:
             muted = await self.__config.muted()
             for guild in muted:
