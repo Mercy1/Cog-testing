@@ -57,7 +57,7 @@ class Mod(ModClass):
                         await self.unmute(user, guild)
             await asyncio.sleep(15)
 
-    async def roleunmute(self, user, guildid, *, moderator: discord.Member = None):
+    async def unmute(self, user, guildid, *, moderator: discord.Member = None):
         guild = self.bot.get_guild(int(guildid))
         if guild is None:
             return
