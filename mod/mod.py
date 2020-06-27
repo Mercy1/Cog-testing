@@ -219,7 +219,7 @@ class Mod(ModClass):
         for user in users:
             if str(ctx.guild.id) not in muted:
                 return await ctx.send("There is nobody currently muted in this server.")
-            await self.roleunmute(str(user.id), str(ctx.guild.id), moderator=ctx.author)
+            await self.unmute(str(user.id), str(ctx.guild.id), moderator=ctx.author)
             await ctx.tick()
 
     @checks.mod_or_permissions(manage_roles=True)
