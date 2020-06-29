@@ -17,10 +17,6 @@ from redbot.core import checks
 class Tempvoice(commands.Cog):
     """My tempvoice cog"""
 
-class voice(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         conn = sqlite3.connect('voice.db')
