@@ -14,8 +14,6 @@ from redbot.core.utils.mod import is_allowed_by_hierarchy, get_audit_reason
 from redbot.core import commands
 from redbot.core import checks
 
-class Tempvoice(commands.Cog):
-    """My tempvoice cog"""
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
