@@ -7,9 +7,6 @@ from typing import Optional
 from discord.ext.commands import CogMeta as DPYCogMeta
 from redbot.core import Config, commands
 
-from .autorooms import AutoRooms
-from .tempchannels import TempChannels
-
 log = logging.getLogger("red.shino.relays")
 
 
