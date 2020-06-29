@@ -157,7 +157,7 @@ class voice(commands.Cog):
         conn.commit()
         conn.close()
 
-    @setup.error
+    @roomsetup.error
     async def info_error(self, ctx, error):
         print(error)
 
