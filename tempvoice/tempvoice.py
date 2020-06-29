@@ -163,7 +163,7 @@ class voice(commands.Cog):
         print(error)
 
 # adding hiarecy check
-	@commands.command()
+@commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channel=True)
     @checks.admin_or_permissions(manage_channel=True)
@@ -186,7 +186,7 @@ class voice(commands.Cog):
         conn.close()
 
 # adding hiarecy check
-	@commands.command()
+@commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channel=True)
     @checks.admin_or_permissions(manage_channel=True)
@@ -209,7 +209,7 @@ class voice(commands.Cog):
         conn.close()
 
 # adding hiarecy check
-	@commands.command()
+@commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channel=True)
     @checks.admin_or_permissions(manage_channel=True)
@@ -231,7 +231,7 @@ class voice(commands.Cog):
         conn.close()
 
 # adding hiarecy check
-	@commands.command()
+@commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channel=True)
     @checks.admin_or_permissions(manage_channel=True)
