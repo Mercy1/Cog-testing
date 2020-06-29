@@ -15,7 +15,9 @@ from redbot.core import commands
 from redbot.core import checks
 
 
-   @commands.Cog.listener()
+
+
+@commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
