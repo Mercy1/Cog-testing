@@ -12,6 +12,7 @@ from discord.ext.commands.cooldowns import BucketType
 from time import gmtime, strftime
 from redbot.core.utils.mod import is_allowed_by_hierarchy, get_audit_reason
 from redbot.core import commands
+from redbot.core import checks
 
 class Tempvoice(commands.Cog):
     """My tempvoice cog"""
