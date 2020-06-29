@@ -8,7 +8,6 @@ from discord.ext import commands
 import traceback
 import sqlite3
 from urllib.parse import quote
-import validators
 from discord.ext.commands.cooldowns import BucketType
 from time import gmtime, strftime
 from redbot.core.utils.mod import is_allowed_by_hierarchy, get_audit_reason
