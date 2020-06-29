@@ -18,18 +18,18 @@ from redbot.core import checks
 
 
 @commands.Cog.listener()
- async def on_voice_state_update(self, member, before, after):
-   conn = sqlite3.connect('voice.db')
-   c = conn.cursor()
-   guildID = member.guild.id
-   c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
-   voice=c.fetchone()
-   if voice is None:
+async def on_voice_state_update(self, member, before, after):
+  conn = sqlite3.connect('voice.db')
+  c = conn.cursor()
+  guildID = member.guild.id
+  c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
+  voice=c.fetchone()
+  if voice is None:
        pass
-        else:
-           voiceID = voice[0]
-            try:
-                if after.channel.id == voiceID:
+       else:
+          voiceID = voice[0]
+           try:
+               if after.channel.id == voiceID:
                     c.execute("SELECT * FROM voiceChannel WHERE userID = ?", (member.id,))
                     cooldown=c.fetchone()
                     if cooldown is None:
