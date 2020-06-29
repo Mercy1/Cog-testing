@@ -165,8 +165,8 @@ class voice(commands.Cog):
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_channel=True)
-    @checks.admin_or_permissions(manage_channel=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    @checks.admin_or_permissions(manage_channels=True)
     @voice.command()
     async def roomlock(self, ctx):
         conn = sqlite3.connect('voice.db')
@@ -188,8 +188,8 @@ class voice(commands.Cog):
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_channel=True)
-    @checks.admin_or_permissions(manage_channel=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    @checks.admin_or_permissions(manage_channels=True)
     @voice.command()
     async def roomunlock(self, ctx):
         conn = sqlite3.connect('voice.db')
@@ -211,8 +211,8 @@ class voice(commands.Cog):
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_channel=True)
-    @checks.admin_or_permissions(manage_channel=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    @checks.admin_or_permissions(manage_channels=True)
     @voice.command(aliases=["allow"])
     async def roompermit(self, ctx, member : discord.Member):
         conn = sqlite3.connect('voice.db')
@@ -233,8 +233,8 @@ class voice(commands.Cog):
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
-    @commands.bot_has_permissions(manage_channel=True)
-    @checks.admin_or_permissions(manage_channel=True)
+    @commands.bot_has_permissions(manage_channels=True)
+    @checks.admin_or_permissions(manage_channels=True)
     @voice.command(aliases=["deny"])
     async def roomreject(self, ctx, member : discord.Member):
         conn = sqlite3.connect('voice.db')
