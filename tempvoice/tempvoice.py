@@ -167,97 +167,101 @@ class voice(commands.Cog):
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channels=True)
     @checks.admin_or_permissions(manage_channels=True)
-        @voice.command()
-            async def roomlock(self, ctx):
-            conn = sqlite3.connect('voice.db')
-            c = conn.cursor()
-            id = ctx.author.id
-            c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
-            voice=c.fetchone()
-            if voice is None:
-                await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
-            else:
-                channelID = voice[0]
-                role = discord.utils.get(ctx.guild.roles, name='@everyone')
-                channel = self.bot.get_channel(channelID)
-                await channel.set_permissions(role, connect=False,read_messages=True)
-                await ctx.channel.send(f'{ctx.author.mention} Voice chat locked! 🔒')
-            conn.commit()
-            conn.close()
+    
+    @voice.command()
+    async def roomlock(self, ctx):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        id = ctx.author.id
+        c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
+        voice=c.fetchone()
+        if voice is None:
+            await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
+        else:
+            channelID = voice[0]
+            role = discord.utils.get(ctx.guild.roles, name='@everyone')
+            channel = self.bot.get_channel(channelID)
+            await channel.set_permissions(role, connect=False,read_messages=True)
+            await ctx.channel.send(f'{ctx.author.mention} Voice chat locked! 🔒')
+        conn.commit()
+        conn.close()
 
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channels=True)
     @checks.admin_or_permissions(manage_channels=True)
-        @voice.command()
-        async def roomunlock(self, ctx):
-            conn = sqlite3.connect('voice.db')
-            c = conn.cursor()
-            id = ctx.author.id
-            c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
-            voice=c.fetchone()
-            if voice is None:
-                await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
-            else:
-                channelID = voice[0]
-                role = discord.utils.get(ctx.guild.roles, name='@everyone')
-                channel = self.bot.get_channel(channelID)
-                await channel.set_permissions(role, connect=True,read_messages=True)
-                await ctx.channel.send(f'{ctx.author.mention} Voice chat unlocked! 🔓')
-            conn.commit()
-            conn.close()
+    
+    @voice.command()
+    async def roomunlock(self, ctx):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        id = ctx.author.id
+        c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
+        voice=c.fetchone()
+        if voice is None:
+            await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
+        else:
+            channelID = voice[0]
+            role = discord.utils.get(ctx.guild.roles, name='@everyone')
+            channel = self.bot.get_channel(channelID)
+            await channel.set_permissions(role, connect=True,read_messages=True)
+            await ctx.channel.send(f'{ctx.author.mention} Voice chat unlocked! 🔓')
+        conn.commit()
+        conn.close()
 
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channels=True)
     @checks.admin_or_permissions(manage_channels=True)
-        @voice.command(aliases=["allow"])
-        async def roompermit(self, ctx, member : discord.Member):
-            conn = sqlite3.connect('voice.db')
-            c = conn.cursor()
-            id = ctx.author.id
-            c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
-            voice=c.fetchone()
-            if voice is None:
-                await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
-            else:
-                channelID = voice[0]
-                channel = self.bot.get_channel(channelID)
-                await channel.set_permissions(member, connect=True)
-                await ctx.channel.send(f'{ctx.author.mention} You have permited {member.name} to have access to the channel. ✅')
-            conn.commit()
-            conn.close()
+    
+    @voice.command(aliases=["allow"])
+    async def roompermit(self, ctx, member : discord.Member):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        id = ctx.author.id
+        c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
+        voice=c.fetchone()
+        if voice is None:
+            await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
+        else:
+            channelID = voice[0]
+            channel = self.bot.get_channel(channelID)
+            await channel.set_permissions(member, connect=True)
+            await ctx.channel.send(f'{ctx.author.mention} You have permited {member.name} to have access to the channel. ✅')
+        conn.commit()
+        conn.close()
 
 # adding hiarecy check
     @commands.command()
     @commands.guild_only()
     @commands.bot_has_permissions(manage_channels=True)
     @checks.admin_or_permissions(manage_channels=True)
-        @voice.command(aliases=["deny"])
-        async def roomreject(self, ctx, member : discord.Member):
-            conn = sqlite3.connect('voice.db')
-            c = conn.cursor()
-            id = ctx.author.id
-            guildID = ctx.guild.id
-            c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
-            voice=c.fetchone()
-            if voice is None:
-                await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
-            else:
-                channelID = voice[0]
-                channel = self.bot.get_channel(channelID)
-                for members in channel.members:
-                    if members.id == member.id:
-                        c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
-                        voice=c.fetchone()
-                        channel2 = self.bot.get_channel(voice[0])
-                        await member.move_to(channel2)
-                await channel.set_permissions(member, connect=False,read_messages=True)
-                await ctx.channel.send(f'{ctx.author.mention} You have rejected {member.name} from accessing the channel. ❌')
-            conn.commit()
-            conn.close()
+    
+    @voice.command(aliases=["deny"])
+    async def roomreject(self, ctx, member : discord.Member):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        id = ctx.author.id
+        guildID = ctx.guild.id
+        c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
+        voice=c.fetchone()
+        if voice is None:
+            await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
+        else:
+            channelID = voice[0]
+            channel = self.bot.get_channel(channelID)
+            for members in channel.members:
+                if members.id == member.id:
+                    c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
+                    voice=c.fetchone()
+                    channel2 = self.bot.get_channel(voice[0])
+                    await member.move_to(channel2)
+            await channel.set_permissions(member, connect=False,read_messages=True)
+            await ctx.channel.send(f'{ctx.author.mention} You have rejected {member.name} from accessing the channel. ❌')
+        conn.commit()
+        conn.close()
 
 
 
