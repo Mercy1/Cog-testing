@@ -17,7 +17,7 @@ log = logging.getLogger("red.shino.relays")
 
 
 
-from .tempvoice import tempvoice
+from .tempvoice import voice
 
 def setup(bot):
     bot.add_cog(tempvoice())
