@@ -12,8 +12,9 @@ import validators
 from discord.ext.commands.cooldowns import BucketType
 from time import gmtime, strftime
 from redbot.core import commands
+from redbot.core import Voice
 
-class voice(commands.Cog):
+class voice(Voice.Cog):
     def __init__(self, bot):
         self.bot = bot
 
