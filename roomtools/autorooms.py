@@ -1,22 +1,24 @@
-from __future__ import annotations
-
+import discord
+import math
 import asyncio
+import aiohttp
+import json
+import datetime
+from discord.ext import commands
+import traceback
+import sqlite3
+from urllib.parse import quote
+import validators
+from discord.ext.commands.cooldowns import BucketType
+from time import gmtime, strftime
 from datetime import datetime, timedelta
 from typing import Generator, cast
-
-import discord
 from redbot.core import checks, commands
 from redbot.core.utils.antispam import AntiSpam
 from redbot.core.utils.chat_formatting import pagify
 
 from .abcs import MixedMeta
 from .checks import aa_active
-import sqlite3
-
-try:
-    from redbot.core.commands import GuildContext
-except ImportError:
-    from redbot.core.commands import Context as GuildContext  # type: ignore
 
 
 class AutoRooms(MixedMeta):
@@ -42,131 +44,83 @@ class AutoRooms(MixedMeta):
                 else:
                     await conf.clear()
 
-    @commands.Cog.listener("on_voice_state_update")
-    async def on_voice_state_update_ar(
-        self,
-        member: discord.Member,
-        before: discord.VoiceState,
-        after: discord.VoiceState,
-    ):
-        """
-        handles logic
-        """
-
-        if before.channel == after.channel:
-            return
-
-        if member.id not in self._antispam:
-            self._antispam[member.id] = AntiSpam(self.antispam_intervals)
-        if (
-            (not self._antispam[member.id].spammy)
-            and after.channel
-            and (await self.ar_config.guild(after.channel.guild).active())
-        ):
-            conf = self.ar_config.channel(after.channel)
-            if await conf.autoroom() or await conf.gameroom():
-                await self.generate_room_for(who=member, source=after.channel)
-
-        if before.channel:
-            await self.ar_cleanup(before.channel.guild)
-
-    @staticmethod
-    def _ar_get_overwrites(
-        source: discord.VoiceChannel, *, who: discord.Member, ownership: bool
-    ) -> dict:
-        overwrites = dict(source.overwrites)
-        if ownership:
-            if who in overwrites:
-                overwrites[who].update(manage_channels=True, manage_roles=True)
-            else:
-                overwrites.update(
-                    {
-                        who: discord.PermissionOverwrite(
-                            manage_channels=True, manage_roles=True
-                        )
-                    }
-                )
-        # Note: Connect is not optional. Even with manage_channels,
-        # the bot cannot edit or delete the channel
-        # if it does not have this. This is *not* documented, and was discovered by trial
-        # and error with a weird edge case someone had.
-        if source.guild.me in overwrites:
-            overwrites[source.guild.me].update(
-                manage_channels=True, manage_roles=True, connect=True
-            )
-        else:
-            overwrites.update(
-                {
-                    source.guild.me: discord.PermissionOverwrite(
-                        manage_channels=True, manage_roles=True, connect=True
-                    )
-                }
-            )
-
-        return overwrites
-
-    async def generate_room_for(
-        self, *, who: discord.Member, source: discord.VoiceChannel
-    ):
-        """
-        makes autorooms
-        """
-        # avoid object creation for comparison, it's slower
-        # manage_channels + move_members + connect
-        #  i.e 16 | 16777216 | = 17825808
-        if not source.guild.me.guild_permissions.value & 17825808 == 17825808:
-            return
-
-        cdata = await self.ar_config.channel(source).all(acquire_lock=False)
-
-        ownership = cdata["ownership"]
-        if ownership is None:
-            ownership = await self.ar_config.guild(source.guild).ownership()
-
-        category = source.category
-
-        overwrites: dict = self._ar_get_overwrites(source, who=who, ownership=ownership)
-
-        if cdata["gameroom"]:
-            cname = "???"
-            if activity := discord.utils.get(
-                who.activities, type=discord.ActivityType.playing
-            ):
-                assert activity is not None, "mypy"  # nosec  # future remove
-                cname = activity.name
-        elif cdata["creatorname"]:
-            cname = f"{source.name} {who.name}"
-        # Stuff here might warrant a schema change to do this better.
-        # Don't add this yet.
-        # elif cdata["personalnamed"]:
-        #     cname = f"{who}'s room"
-        # elif cdata["randomname"]:
-        #     pass   # TODO
-        else:
-            cname = source.name
-
-        try:
-            chan = await source.guild.create_voice_channel(
-                cname, category=category, overwrites=overwrites
-            )
-        except discord.Forbidden:
-            await self.ar_config.guild(source.guild).active.set(False)
-            return
-        except discord.HTTPException:
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        guildID = member.guild.id
+        c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
+        voice=c.fetchone()
+        if voice is None:
             pass
         else:
-            await self.ar_config.channel(chan).clone.set(True)
-            if who.id not in self._antispam:
-                self._antispam[who.id] = AntiSpam(self.antispam_intervals)
-            self._antispam[who.id].stamp()
-            await who.move_to(chan, reason="autoroom")
-            await asyncio.sleep(0.5)
-            await chan.edit(bitrate=source.bitrate, user_limit=source.user_limit)
-            # TODO:
-            # discord.HTTP to avoid needing the edit
-            # This extra API call is avoidable when working with the lower level tools.
+            voiceID = voice[0]
+            try:
+                if after.channel.id == voiceID:
+                    c.execute("SELECT * FROM voiceChannel WHERE userID = ?", (member.id,))
+                    cooldown=c.fetchone()
+                    if cooldown is None:
+                        pass
+                    else:
+                        await member.send("Creating channels too quickly you've been put on a 15 second cooldown!")
+                        await asyncio.sleep(15)
+                    c.execute("SELECT voiceCategoryID FROM guild WHERE guildID = ?", (guildID,))
+                    voice=c.fetchone()
+                    c.execute("SELECT channelName, channelLimit FROM userSettings WHERE userID = ?", (member.id,))
+                    setting=c.fetchone()
+                    c.execute("SELECT channelLimit FROM guildSettings WHERE guildID = ?", (guildID,))
+                    guildSetting=c.fetchone()
+                    if setting is None:
+                        name = f"{member.name}'s channel"
+                        if guildSetting is None:
+                            limit = 0
+                        else:
+                            limit = guildSetting[0]
+                    else:
+                        if guildSetting is None:
+                            name = setting[0]
+                            limit = setting[1]
+                        elif guildSetting is not None and setting[1] == 0:
+                            name = setting[0]
+                            limit = guildSetting[0]
+                        else:
+                            name = setting[0]
+                            limit = setting[1]
+                    categoryID = voice[0]
+                    id = member.id
+                    category = self.bot.get_channel(categoryID)
+                    channel2 = await member.guild.create_voice_channel(name,category=category)
+                    channelID = channel2.id
+                    await member.move_to(channel2)
+                    await channel2.set_permissions(self.bot.user, connect=True,read_messages=True)
+                    await channel2.edit(name= name, user_limit = limit)
+                    c.execute("INSERT INTO voiceChannel VALUES (?, ?)", (id,channelID))
+                    conn.commit()
+                    def check(a,b,c):
+                        return len(channel2.members) == 0
+                    await self.bot.wait_for('voice_state_update', check=check)
+                    await channel2.delete()
+                    await asyncio.sleep(3)
+                    c.execute('DELETE FROM voiceChannel WHERE userID=?', (id,))
+            except:
+                pass
+        conn.commit()
+        conn.close()
 
-       
+    @commands.command()
+    async def help(self, ctx):
+        embed = discord.Embed(title="Help", description="",color=0x7289da)
+        embed.set_author(name="Voice Create",url="https://discordbots.org/bot/472911936951156740", icon_url="https://i.imgur.com/i7vvOo5.png")
+        embed.add_field(name=f'**Commands**', value=f'**Lock your channel by using the following command:**\n\n`.voice lock`\n\n------------\n\n'
+                        f'**Unlock your channel by using the following command:**\n\n`.voice unlock`\n\n------------\n\n'
+                        f'**Change your channel name by using the following command:**\n\n`.voice name <name>`\n\n**Example:** `.voice name EU 5kd+`\n\n------------\n\n'
+                        f'**Change your channel limit by using the following command:**\n\n`.voice limit number`\n\n**Example:** `.voice limit 2`\n\n------------\n\n'
+                        f'**Give users permission to join by using the following command:**\n\n`.voice permit @person`\n\n**Example:** `.voice permit @Sam#9452`\n\n------------\n\n'
+                        f'**Claim ownership of channel once the owner has left:**\n\n`.voice claim`\n\n**Example:** `.voice claim`\n\n------------\n\n'
+                        f'**Remove permission and the user from your channel using the following command:**\n\n`.voice reject @person`\n\n**Example:** `.voice reject @Sam#9452`\n\n', inline='false')
+        embed.set_footer(text='Bot developed by Sam#9452')
+        await ctx.channel.send(embed=embed)
+
     @commands.group()
     async def voice(self, ctx):
         pass
