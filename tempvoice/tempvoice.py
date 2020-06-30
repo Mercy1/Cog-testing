@@ -11,7 +11,7 @@ from urllib.parse import quote
 import validators
 from discord.ext.commands.cooldowns import BucketType
 from time import gmtime, strftime
-
+from redbot.core import commands
 
 class voice(commands.Cog):
     def __init__(self, bot):
