@@ -108,18 +108,28 @@ class AutoRooms(MixedMeta):
         conn.close()
 
     @commands.command()
-    async def help(self, ctx):
-        embed = discord.Embed(title="Help", description="",color=0x7289da)
-        embed.set_author(name="Voice Create",url="https://discordbots.org/bot/472911936951156740", icon_url="https://i.imgur.com/i7vvOo5.png")
-        embed.add_field(name=f'**Commands**', value=f'**Lock your channel by using the following command:**\n\n`.voice lock`\n\n------------\n\n'
-                        f'**Unlock your channel by using the following command:**\n\n`.voice unlock`\n\n------------\n\n'
-                        f'**Change your channel name by using the following command:**\n\n`.voice name <name>`\n\n**Example:** `.voice name EU 5kd+`\n\n------------\n\n'
-                        f'**Change your channel limit by using the following command:**\n\n`.voice limit number`\n\n**Example:** `.voice limit 2`\n\n------------\n\n'
-                        f'**Give users permission to join by using the following command:**\n\n`.voice permit @person`\n\n**Example:** `.voice permit @Sam#9452`\n\n------------\n\n'
-                        f'**Claim ownership of channel once the owner has left:**\n\n`.voice claim`\n\n**Example:** `.voice claim`\n\n------------\n\n'
-                        f'**Remove permission and the user from your channel using the following command:**\n\n`.voice reject @person`\n\n**Example:** `.voice reject @Sam#9452`\n\n', inline='false')
-        embed.set_footer(text='Bot developed by Sam#9452')
-        await ctx.channel.send(embed=embed)
+    @commands.group()
+    async def room(self, ctx):
+        """
+     Allows the creation and handling of temporary voice chats
+        """
+
+    pass
+    @room.command()
+    @checks.guildowner_or_permissions(manage_messages=True)
+    async def create(self, ctx, *, name: str=None):
+        """
+    Creates a temporary VC with you as the owner
+        """
+    """Lock your channel by using the following command:**.room lock**
+    Unlock your channel by using the following command:.room unlock
+    Change your channel name by using the following command:.room name <name> ,Example:.voice name hi there ^^
+    Change your channel limit by using the following command:.room limit <number> ,Example:.room limit 2
+    Give users permission to join by using the following command:.voice permit @person Example:.voice permit @Sam#9452
+    Claim ownership of channel once the owner has left: .voice claim Example:.room claim
+    Remove permission and the user from your channel using the following command: .voice reject @person Example:.voice reject @Sam#9452,
+    -----------------------------------------------------------------------------------------------------------------------------------------
+    Base code by Sam#9452, edited by Sinon#6302, Bot ran by NW bot dev team"""
 
     @commands.group()
     async def voice(self, ctx):
