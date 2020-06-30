@@ -107,14 +107,12 @@ class AutoRooms(MixedMeta):
         conn.commit()
         conn.close()
 
-    @commands.command()
+    
     @commands.group()
     async def room(self, ctx):
-        """
-     Allows the creation and handling of temporary voice chats
-        """
+        pass
 
-    pass
+
     @room.command()
     @checks.guildowner_or_permissions(manage_messages=True)
     async def create(self, ctx, *, name: str=None):
