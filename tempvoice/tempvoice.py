@@ -8,28 +8,28 @@ from discord.ext import commands
 import traceback
 import sqlite3
 from urllib.parse import quote
+import validators
 from discord.ext.commands.cooldowns import BucketType
 from time import gmtime, strftime
-from redbot.core.utils.mod import is_allowed_by_hierarchy, get_audit_reason
-from redbot.core import commands
-from redbot.core import checks
 
 
+class voice(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
 
-
-@commands.Cog.listener()
-async def on_voice_state_update(self, member, before, after):
-  conn = sqlite3.connect('voice.db')
-  c = conn.cursor()
-  guildID = member.guild.id
-  c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
-  voice=c.fetchone()
-  if voice is None:
-       pass
-       else:
-          voiceID = voice[0]
-           try:
-               if after.channel.id == voiceID:
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        conn = sqlite3.connect('voice.db')
+        c = conn.cursor()
+        guildID = member.guild.id
+        c.execute("SELECT voiceChannelID FROM guild WHERE guildID = ?", (guildID,))
+        voice=c.fetchone()
+        if voice is None:
+            pass
+        else:
+            voiceID = voice[0]
+            try:
+                if after.channel.id == voiceID:
                     c.execute("SELECT * FROM voiceChannel WHERE userID = ?", (member.id,))
                     cooldown=c.fetchone()
                     if cooldown is None:
@@ -81,9 +81,9 @@ async def on_voice_state_update(self, member, before, after):
         conn.close()
 
     @commands.command()
-    async def roomhelp(self, ctx):
+    async def help(self, ctx):
         embed = discord.Embed(title="Help", description="",color=0x7289da)
-        embed.set_author(name="Temp Voice Create",url="http://tiny.cc/94tjrz", icon_url="https://cdn.discordapp.com/avatars/488693883081850880/1ac6f2bf3a4321a22ef6c552c08cce27.png?size=1024")
+        embed.set_author(name="Voice Create",url="https://discordbots.org/bot/472911936951156740", icon_url="https://i.imgur.com/i7vvOo5.png")
         embed.add_field(name=f'**Commands**', value=f'**Lock your channel by using the following command:**\n\n`.voice lock`\n\n------------\n\n'
                         f'**Unlock your channel by using the following command:**\n\n`.voice unlock`\n\n------------\n\n'
                         f'**Change your channel name by using the following command:**\n\n`.voice name <name>`\n\n**Example:** `.voice name EU 5kd+`\n\n------------\n\n'
@@ -91,7 +91,7 @@ async def on_voice_state_update(self, member, before, after):
                         f'**Give users permission to join by using the following command:**\n\n`.voice permit @person`\n\n**Example:** `.voice permit @Sam#9452`\n\n------------\n\n'
                         f'**Claim ownership of channel once the owner has left:**\n\n`.voice claim`\n\n**Example:** `.voice claim`\n\n------------\n\n'
                         f'**Remove permission and the user from your channel using the following command:**\n\n`.voice reject @person`\n\n**Example:** `.voice reject @Sam#9452`\n\n', inline='false')
-        embed.set_footer(text='Base code by Sam#9452, edited by Sinon#6302, Bot ran by NW bot dev team')
+        embed.set_footer(text='Bot developed by Sam#9452')
         await ctx.channel.send(embed=embed)
 
     @commands.group()
@@ -99,7 +99,7 @@ async def on_voice_state_update(self, member, before, after):
         pass
 
     @voice.command()
-    async def roomsetup(self, ctx):
+    async def setup(self, ctx):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         guildID = ctx.guild.id
@@ -138,7 +138,7 @@ async def on_voice_state_update(self, member, before, after):
         conn.close()
 
     @commands.command()
-    async def roomsetlimit(self, ctx, num):
+    async def setlimit(self, ctx, num):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         if ctx.author.id == ctx.guild.owner.id or ctx.author.id == 151028268856770560:
@@ -154,18 +154,12 @@ async def on_voice_state_update(self, member, before, after):
         conn.commit()
         conn.close()
 
-    @roomsetup.error
+    @setup.error
     async def info_error(self, ctx, error):
         print(error)
 
-# adding hiarecy check
-    @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_channels=True)
-    @checks.admin_or_permissions(manage_channels=True)
-    
     @voice.command()
-    async def roomlock(self, ctx):
+    async def lock(self, ctx):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
@@ -182,14 +176,8 @@ async def on_voice_state_update(self, member, before, after):
         conn.commit()
         conn.close()
 
-# adding hiarecy check
-    @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_channels=True)
-    @checks.admin_or_permissions(manage_channels=True)
-    
     @voice.command()
-    async def roomunlock(self, ctx):
+    async def unlock(self, ctx):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
@@ -206,14 +194,8 @@ async def on_voice_state_update(self, member, before, after):
         conn.commit()
         conn.close()
 
-# adding hiarecy check
-    @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_channels=True)
-    @checks.admin_or_permissions(manage_channels=True)
-    
     @voice.command(aliases=["allow"])
-    async def roompermit(self, ctx, member : discord.Member):
+    async def permit(self, ctx, member : discord.Member):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
@@ -229,21 +211,15 @@ async def on_voice_state_update(self, member, before, after):
         conn.commit()
         conn.close()
 
-# adding hiarecy check
-    @commands.command()
-    @commands.guild_only()
-    @commands.bot_has_permissions(manage_channels=True)
-    @checks.admin_or_permissions(manage_channels=True)
-    
     @voice.command(aliases=["deny"])
-    async def roomreject(self, ctx, member : discord.Member):
+    async def reject(self, ctx, member : discord.Member):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
         guildID = ctx.guild.id
         c.execute("SELECT voiceID FROM voiceChannel WHERE userID = ?", (id,))
         voice=c.fetchone()
-        if voice is None:
+        if voice is None or ctx.message.author.top_role <= member.top_role:
             await ctx.channel.send(f"{ctx.author.mention} You don't own a channel.")
         else:
             channelID = voice[0]
@@ -262,7 +238,7 @@ async def on_voice_state_update(self, member, before, after):
 
 
     @voice.command()
-    async def roomlimit(self, ctx, limit):
+    async def limit(self, ctx, limit):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
@@ -286,7 +262,7 @@ async def on_voice_state_update(self, member, before, after):
 
 
     @voice.command()
-    async def roomname(self, ctx,*, name):
+    async def name(self, ctx,*, name):
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
         id = ctx.author.id
@@ -309,7 +285,7 @@ async def on_voice_state_update(self, member, before, after):
         conn.close()
 
     @voice.command()
-    async def roomclaim(self, ctx):
+    async def claim(self, ctx):
         x = False
         conn = sqlite3.connect('voice.db')
         c = conn.cursor()
