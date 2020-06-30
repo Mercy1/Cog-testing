@@ -1,4 +1,5 @@
 from .tempvoice import voice
 
-def setup(bot):
-    bot.add_cog(voice())
+async def setup(bot: commands.Bot):
+    cog = voice(bot)
+    bot.add_cog(cog)
