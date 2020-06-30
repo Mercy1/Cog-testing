@@ -312,4 +312,4 @@ class voice(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(tempvoice(bot))
+    bot.add_cog(voice(bot))
