@@ -259,9 +259,9 @@ class TempMutes(MixinMeta):
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @role.command()     
+    #@role.command()     
     @commands.group(invoke_without_command=True, name="roleunmute")
-    async def unmute(self, ctx, users: commands.Greedy[discord.Member]):
+    async def _roleunmute(self, ctx, users: commands.Greedy[discord.Member]):
         """Unmute users."""
         muted = await self.__config.muted()
         for user in users:
