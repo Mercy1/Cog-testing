@@ -510,22 +510,21 @@ class MuteMixin(MixinMeta):
 
 
     @commands.group()
-    async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
-        duration: Optional[TimedeltaConverter] = None,
-        *,
-        reason: str = None,):
+    async def role(self, ctx: commands.Context):
+        """Temp mutes role"""
         pass
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @rolemute.command()
-    async def roleset(self, ctx, role: discord.Role):
+    @role.command(name=setrole)
+    async def setrole(self, ctx, role: discord.Role):
         """Set a mute role."""
         await self.__config.guild(ctx.guild).muterole.set(role.id)
         await ctx.send("The muted role has been set to {}".format(role.name))
 
     @commands.bot_has_permissions(manage_roles=True)
-    @checks.mod_or_permissions(manage_channels=True)     
+    @checks.mod_or_permissions(manage_channels=True)
+    @role.command(name=unmute)     
     @commands.group(invoke_without_command=True, name="roleunmute")
     async def _roleunmute(self, ctx, moderator:discord.member, users: commands.Greedy[discord.Member]):
         """Unmute users."""
@@ -538,7 +537,7 @@ class MuteMixin(MixinMeta):
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @rolemute.command(name="list")
+    @role.command(name="list")
     async def _list(self, ctx):
         """List those who are muted."""
         muted = await self.__config.muted()
