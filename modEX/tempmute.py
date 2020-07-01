@@ -1,117 +1,52 @@
-from redbot.core.bot import Red
 import asyncio
 import logging
-import re
-import collections
-import discord
 from datetime import datetime, timedelta
 from typing import Optional
-from redbot.core.commands.converter import TimedeltaConverter #sin add
-from redbot.core.utils.predicates import MessagePredicate #sin add
-from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
-from redbot.core import commands, Config, checks, utils, i18n
+
+import discord
+from redbot.core import Config, checks, commands, modlog
+from redbot.core.commands.converter import TimedeltaConverter
+from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta
+from redbot.core.utils.mod import is_allowed_by_hierarchy
+from redbot.core.utils.predicates import MessagePredicate
 from .abc import MixinMeta
-from collections import defaultdict
 
-_ = i18n.Translator("Mod", __file__)
+log = logging.getLogger("red.flarecogs.mod")
 
-log = logging.getLogger("red.Shino-cogs.tempmuute")
 
-class Time(commands.Converter):
-    TIME_AMNT_REGEX = re.compile("([1-9][0-9]*)([a-z]+)", re.IGNORECASE)
-    TIME_QUANTITIES = collections.OrderedDict(
-        [
-            ("seconds", 1),
-            ("minutes", 60),
-            ("hours", 3600),
-            ("days", 86400),
-            ("weeks", 604800),
-            ("months", 2.628e6),
-            ("years", 3.154e7),
-        ]
-    )  # (amount in seconds, max amount)
+class tempmute(MixinMeta):
+    """timed mute."""
 
-    async def convert(self, ctx, arg):
-        result = None
-        seconds = self.get_seconds(arg)
-        time_now = datetime.datetime.utcnow()
-        days, secs = divmod(seconds, 3600 * 24)
-        end_time = time_now + datetime.timedelta(days=days, seconds=secs)
-        result = end_time
-        if result is None:
-            raise commands.BadArgument('Unable to parse Date "{}" '.format(arg))
-        return result
+    __version__ = "1.1.4"
 
-    @classmethod
-    async def fromString(cls, arg):
-        seconds = cls.get_seconds(cls, arg)
-        time_now = datetime.datetime.utcnow()
-        if seconds is not None:
-            days, secs = divmod(seconds, 3600 * 24)
-            end_time = time_now + datetime.timedelta(days=days, seconds=secs)
-            return end_time
-        else:
-            return None
+    def format_help_for_context(self, ctx):
+        """Thanks Sinbad."""
+        pre_processed = super().format_help_for_context(ctx)
+        return f"{pre_processed}\nCog Version: {self.__version__}"
 
-    def get_seconds(self, time):
-        """Returns the amount of converted time or None if invalid"""
-        seconds = 0
-        for time_match in self.TIME_AMNT_REGEX.finditer(time):
-            time_amnt = int(time_match.group(1))
-            time_abbrev = time_match.group(2)
-            time_quantity = discord.utils.find(
-                lambda t: t[0].startswith(time_abbrev), self.TIME_QUANTITIES.items()
-            )
-            if time_quantity is not None:
-                seconds += time_amnt * time_quantity[1]
-        return None if seconds == 0 else seconds
-
-class hierarchy(MixinMeta):
-    """hierarchy checks"""
-    async def hierarchy(self, ctx: commands.Context):
-        """Toggle role hierarchy check for mods and admins.
-        **WARNING**: Disabling this setting will allow mods to take
-        actions on users above them in the role hierarchy!
-        This is enabled by default.
-        """
-        guild = ctx.guild
-        toggled = await self.settings.guild(guild).respect_hierarchy()
-        if not toggled:
-            await self.settings.guild(guild).respect_hierarchy.set(True)
-            await ctx.send(
-                _("Role hierarchy will be checked when moderation commands are issued.")
-            )
-        else:
-            await self.settings.guild(guild).respect_hierarchy.set(False)
-            await ctx.send(
-                _("Role hierarchy will be ignored when moderation commands are issued.")
-            )
-    
-    
-
-class TempMutes(MixinMeta):
-    """temp mutes"""
-    
-    def __init__(self, bot: Red):
-        super().__init__()
+    def __init__(self, bot):
+        super().__init__(bot)
         self.bot = bot
-
-        self.settings = Config.get_conf(self, 4961522000, force_registration=True)
-        self.settings.register_global(**self.default_global_settings)
-        self.settings.register_guild(**self.default_guild_settings)
-        self.settings.register_channel(**self.default_channel_settings)
-        self.settings.register_member(**self.default_member_settings)
-        self.settings.register_user(**self.default_user_settings)
-        self.cache: dict = {}
-        self.tban_expiry_task = self.bot.loop.create_task(self.check_tempban_expirations())
-        self.last_case: dict = defaultdict(dict)
-
-        self._ready = asyncio.Event()
+        self.__config = Config.get_conf(
+            self, identifier=95932766180343808, force_registration=True
+        )
         defaultsguild = {"muterole": None, "respect_hierarchy": True}
         defaults = {"muted": {}}
         self.__config.register_guild(**defaultsguild)
         self.__config.register_global(**defaults)
         self.loop = bot.loop.create_task(self.unmute_loop())
+
+    # Removes main mods mute commands.
+    voice_mute = None
+    channel_mute = None
+    guild_mute = None
+    unmute_voice = None
+    unmute_channel = None
+    unmute_guild = None
+    # ban = None # TODO: Merge hackban and ban.
+
+    def cog_unload(self):
+        self.loop.cancel()
 
     async def unmute_loop(self):
         while True:
@@ -122,8 +57,7 @@ class TempMutes(MixinMeta):
                         await self.unmute(user, guild)
             await asyncio.sleep(15)
 
-        #code for unmute loop
-    async def roleunmute(self, user, guildid, *, moderator: discord.Member = None):
+    async def unmute(self, user, guildid, *, moderator: discord.Member = None):
         guild = self.bot.get_guild(int(guildid))
         if guild is None:
             return
@@ -137,8 +71,8 @@ class TempMutes(MixinMeta):
             else:
                 await member.remove_roles(muterole, reason="Unmuted by {}.".format(moderator))
                 log.info("Unmuted {} in {} by {}.".format(member, guild, moderator))
-            await log.create_case(
-               self.bot,
+            await modlog.create_case(
+                self.bot,
                 guild,
                 datetime.utcnow(),
                 "sunmute",
@@ -149,10 +83,24 @@ class TempMutes(MixinMeta):
         else:
             log.info("{} is no longer in {}, removing from muted list.".format(user, guild))
         async with self.__config.muted() as muted:
-          if user in muted[guildid]:
-               del muted[guildid][user]
-               
-#code for mute role
+            if user in muted[guildid]:
+                del muted[guildid][user]
+
+    async def create_muted_role(self, guild):
+        muted_role = await guild.create_role(
+            name="Muted", reason="Muted role created for timed mutes."
+        )
+        await self.__config.guild(guild).muterole.set(muted_role.id)
+        o = discord.PermissionOverwrite(send_messages=False, add_reactions=False, connect=False)
+        for channel in guild.channels:
+            mr_overwrite = channel.overwrites.get(muted_role)
+            if not mr_overwrite or o != mr_overwrite:
+                await channel.set_permissions(
+                    muted_role,
+                    overwrite=o,
+                    reason="Ensures that Muted users won't be able to talk here.",
+                )
+
     @checks.mod_or_permissions(manage_roles=True)
     @checks.bot_has_permissions(manage_roles=True)
     @commands.group(invoke_without_command=True)
@@ -205,7 +153,7 @@ class TempMutes(MixinMeta):
                 if user == ctx.author:
                     failed.append(f"{user} - Self harm is bad.")
                     continue
-                if not await hierarchy(
+                if not await is_allowed_by_hierarchy(
                     self.bot, self.__config, guild, ctx.author, user
                 ):
                     failed.append(
@@ -230,7 +178,7 @@ class TempMutes(MixinMeta):
                     "time": datetime.now().timestamp(),
                     "expiry": expiry.timestamp(),
                 }
-                await log.create_case(
+                await modlog.create_case(
                     ctx.bot,
                     ctx.guild,
                     ctx.message.created_at,
@@ -253,25 +201,17 @@ class TempMutes(MixinMeta):
             failemsg = "\n{}".format("\n".join(failed))
             await ctx.send(
                 f"{len(failed)} user{'s' if len(failed) > 1 else ''} failed to be muted for the following reasons.{failemsg}"
-            )        
-#commands
-    @commands.group()
-    async def role(self, ctx: commands.Context):
-        """Temp mutes role"""
-        pass
+            )
 
-    @commands.bot_has_permissions(manage_roles=True)
-    @checks.mod_or_permissions(manage_channels=True)
+    @checks.admin_or_permissions(manage_roles=True)
     @rolemute.command()
     async def roleset(self, ctx, role: discord.Role):
         """Set a mute role."""
         await self.__config.guild(ctx.guild).muterole.set(role.id)
         await ctx.send("The muted role has been set to {}".format(role.name))
 
-
-    @commands.bot_has_permissions(manage_roles=True)
-    @checks.mod_or_permissions(manage_channels=True)
-    #@role.command()     
+    @checks.mod_or_permissions(manage_roles=True)
+    @checks.bot_has_permissions(manage_roles=True)
     @commands.group(invoke_without_command=True, name="roleunmute")
     async def _roleunmute(self, ctx, users: commands.Greedy[discord.Member]):
         """Unmute users."""
@@ -279,12 +219,11 @@ class TempMutes(MixinMeta):
         for user in users:
             if str(ctx.guild.id) not in muted:
                 return await ctx.send("There is nobody currently muted in this server.")
-        await self.unmute(str(user.id), str(ctx.guild.id))
-        await ctx.tick()           
+            await self.unmute(str(user.id), str(ctx.guild.id), moderator=ctx.author)
+            await ctx.tick()
 
-    @commands.bot_has_permissions(manage_roles=True)
-    @checks.mod_or_permissions(manage_channels=True)
-    @role.command(name="list")
+    @checks.mod_or_permissions(manage_roles=True)
+    @rolemute.command(name="list")
     async def _list(self, ctx):
         """List those who are muted."""
         muted = await self.__config.muted()
@@ -296,5 +235,4 @@ class TempMutes(MixinMeta):
             expiry = datetime.fromtimestamp(guildmuted[user]["expiry"]) - datetime.now()
             msg += f"{self.bot.get_user(int(user)).mention} is muted for {humanize_timedelta(timedelta=expiry)}\n"
         await ctx.maybe_send_embed(msg if msg else "Nobody is currently muted.")
-# thank god this took time ^^        
-
+# thank god this took time ^^
