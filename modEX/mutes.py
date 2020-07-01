@@ -1,12 +1,16 @@
 import asyncio
+import logging #Sin add
 from typing import cast, Optional
 
 import discord
 from redbot.core import commands, checks, i18n, modlog
-from redbot.core.utils.chat_formatting import format_perms_list
+from redbot.core.utils.chat_formatting import format_perms_list, humanize_list, humanize_timedelta #sin added last 2
 from redbot.core.utils.mod import get_audit_reason, is_allowed_by_hierarchy
 from .abc import MixinMeta
-import datetime
+from datetime import datetime, timedelta #sin add
+from redbot.core.commands.converter import TimedeltaConverter #sin add
+
+
 
 T_ = i18n.Translator("Mod", __file__)
 
@@ -278,7 +282,7 @@ class MuteMixin(MixinMeta):
     @commands.guild_only()
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    async def unmute(self, ctx: commands.Context):
+    async def unmute(self, user, ctx: commands.Context):
         """Unmute users."""
         pass
 
@@ -476,10 +480,42 @@ class MuteMixin(MixinMeta):
                         await self.unmute(user, guild)
             await asyncio.sleep(15)
 
+#code for unmute loop
+    async def roleunmute(self, user, users:commands.Greedy[discord.Member], guildid, *, moderator: discord.Member = None):
+        guild = self.bot.get_guild(int(guildid))
+        if guild is None:
+            return
+        mutedroleid = await self.__config.guild(guild).muterole()
+        muterole = guild.get_role(mutedroleid)
+        member = guild.get_member(int(user))
+        if member is not None:
+            if moderator is None:
+                await member.remove_roles(muterole, reason="Mute expired.")
+                modlog.info("Unmuted {} in {}.".format(member, guild))
+            else:
+                await member.remove_roles(muterole, reason="Unmuted by {}.".format(moderator))
+                modlog.info("Unmuted {} in {} by {}.".format(member, guild, moderator))
+            await modlog.create_case(
+                self.bot,
+                guild,
+                datetime.utcnow(),
+                "sunmute",
+                member,
+                moderator,
+                "Automatic Unmute" if moderator is None else None,
+            )
+        else:
+            modlog.info("{} is no longer in {}, removing from muted list.".format(user, guild))
+        async with self.__config.muted() as muted:
+            if user in muted[guildid]:
+                del muted[guildid][user]
 
 
-    @commands.group()
-    async def rolemute(self, ctx):
+@commands.group()
+async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
+        duration: Optional[TimedeltaConverter] = None,
+        *,
+        reason: str = None,):
         pass
 
         @commands.bot_has_permissions(manage_roles=True)
@@ -494,7 +530,7 @@ class MuteMixin(MixinMeta):
         @checks.mod_or_permissions(manage_channels=True)     
         @commands.group(invoke_without_command=True, name="roleunmute")
         async def _roleunmute(self, ctx, users: commands.Greedy[discord.Member]):
-        """Unmute users."""
+            """Unmute users."""
         muted = await self.__config.muted()
         for user in users:
             if str(ctx.guild.id) not in muted:
