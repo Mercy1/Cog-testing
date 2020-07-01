@@ -516,8 +516,8 @@ class MuteMixin(MixinMeta):
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @role.command(name=setrole)
-    async def setrole(self, ctx, role: discord.Role):
+    @role.command(name=roleset)
+    async def roleset(self, ctx, role: discord.Role):
         """Set a mute role."""
         await self.__config.guild(ctx.guild).muterole.set(role.id)
         await ctx.send("The muted role has been set to {}".format(role.name))
