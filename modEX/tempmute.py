@@ -10,7 +10,7 @@ from redbot.core.utils.predicates import MessagePredicate #sin add
 from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
 from redbot.core import commands, Config, checks, utils
 from .abc import MixinMeta
-from redbot.core.utils.mod import is_allowed_by_hierarchy
+
 
 log = logging.getLogger("red.Shino-cogs.tempmuute")
 
@@ -63,6 +63,28 @@ class Time(commands.Converter):
                 seconds += time_amnt * time_quantity[1]
         return None if seconds == 0 else seconds
 
+class hierarchy(MixinMeta):
+    """hierarchy checks"""
+async def hierarchy(self, ctx: commands.Context):
+        """Toggle role hierarchy check for mods and admins.
+        **WARNING**: Disabling this setting will allow mods to take
+        actions on users above them in the role hierarchy!
+        This is enabled by default.
+        """
+        guild = ctx.guild
+        toggled = await self.settings.guild(guild).respect_hierarchy()
+        if not toggled:
+            await self.settings.guild(guild).respect_hierarchy.set(True)
+            await ctx.send(
+                _("Role hierarchy will be checked when moderation commands are issued.")
+            )
+        else:
+            await self.settings.guild(guild).respect_hierarchy.set(False)
+            await ctx.send(
+                _("Role hierarchy will be ignored when moderation commands are issued.")
+            )
+    
+    
 
 class TempMutes(MixinMeta):
     """temp mutes"""
@@ -126,7 +148,7 @@ class TempMutes(MixinMeta):
         self,
         ctx,
         users: commands.Greedy[discord.Member],
-        duration: Optional[datetime.datetime.fromtimestamp] = None,
+        duration: Optional[start_time = datetime.datetime.fromtimestamp(rolemute["duration"]).strftime(self.time_format)] = None,
         *,
         reason: str = None,
     ):
@@ -171,7 +193,7 @@ class TempMutes(MixinMeta):
                 if user == ctx.author:
                     failed.append(f"{user} - Self harm is bad.")
                     continue
-                if not await is_allowed_by_hierarchy(
+                if not await respect_hierarchy(
                     self.bot, self.__config, guild, ctx.author, user
                 ):
                     failed.append(
