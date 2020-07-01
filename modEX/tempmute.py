@@ -1,3 +1,4 @@
+from redbot.core.bot import Red
 import asyncio
 import logging
 import re
@@ -10,6 +11,7 @@ from redbot.core.utils.predicates import MessagePredicate #sin add
 from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
 from redbot.core import commands, Config, checks, utils, i18n
 from .abc import MixinMeta
+from collections import defaultdict
 
 _ = i18n.Translator("Mod", __file__)
 
@@ -90,12 +92,21 @@ class hierarchy(MixinMeta):
 class TempMutes(MixinMeta):
     """temp mutes"""
     
-    def __init__(self, bot):
-        super().__init__(modEX)
+    def __init__(self, bot: Red):
+        super().__init__()
         self.bot = bot
-        self.__config = Config.get_conf(
-            self, identifier=95932766180343808, force_registration=True
-        )
+
+        self.settings = Config.get_conf(self, 4961522000, force_registration=True)
+        self.settings.register_global(**self.default_global_settings)
+        self.settings.register_guild(**self.default_guild_settings)
+        self.settings.register_channel(**self.default_channel_settings)
+        self.settings.register_member(**self.default_member_settings)
+        self.settings.register_user(**self.default_user_settings)
+        self.cache: dict = {}
+        self.tban_expiry_task = self.bot.loop.create_task(self.check_tempban_expirations())
+        self.last_case: dict = defaultdict(dict)
+
+        self._ready = asyncio.Event()
         defaultsguild = {"muterole": None, "respect_hierarchy": True}
         defaults = {"muted": {}}
         self.__config.register_guild(**defaultsguild)
