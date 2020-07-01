@@ -10,7 +10,7 @@ from redbot.core.utils.predicates import MessagePredicate #sin add
 from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
 from redbot.core import commands, Config, checks, utils
 from .abc import MixinMeta
-from .settings import respecthierarchy
+from redbot.core.utils.mod import is_allowed_by_hierarchy
 
 log = logging.getLogger("red.Shino-cogs.tempmuute")
 
@@ -171,7 +171,7 @@ class TempMutes(MixinMeta):
                 if user == ctx.author:
                     failed.append(f"{user} - Self harm is bad.")
                     continue
-                if not await respect_hierarchy(
+                if not await is_allowed_by_hierarchy(
                     self.bot, self.__config, guild, ctx.author, user
                 ):
                     failed.append(
