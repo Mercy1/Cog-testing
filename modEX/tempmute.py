@@ -90,7 +90,7 @@ class hierarchy(MixinMeta):
 class TempMutes(MixinMeta):
     """temp mutes"""
     
-    def __init__(ModEX):
+    def __init__(ModEX, bot):
         super().__init__(bot)
         self.bot = bot
         self.__config = Config.get_conf(
