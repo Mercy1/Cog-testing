@@ -16,7 +16,7 @@ from .mutes import MuteMixin
 from .names import ModInfo
 from .slowmode import Slowmode
 from .settings import ModSettings
-
+from .tempmute import TempMutes
 _ = T_ = Translator("Mod", __file__)
 
 __version__ = "1.1.0"
@@ -36,6 +36,7 @@ class ModEX(
     ModSettings,
     Events,
     KickBanMixin,
+    TempMutes,
     MoveToCore,
     MuteMixin,
     ModInfo,
