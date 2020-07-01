@@ -90,12 +90,7 @@ async def hierarchy(self, ctx: commands.Context):
 class TempMutes(MixinMeta):
     """temp mutes"""
 
-    def __init__(self, bot):
-        super().__init__(bot)
-        self.bot = bot
-        self.__config = Config.get_conf(
-            self, identifier=95932766180343808, force_registration=True
-        )
+
         defaultsguild = {"muterole": None, "respect_hierarchy": True}
         defaults = {"muted": {}}
         self.__config.register_guild(**defaultsguild)
