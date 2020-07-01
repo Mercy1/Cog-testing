@@ -11,6 +11,7 @@ from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta 
 from redbot.core import commands, Config, checks, utils
 from .abc import MixinMeta
 
+_ = i18n.Translator("Mod", __file__)
 
 log = logging.getLogger("red.Shino-cogs.tempmuute")
 
