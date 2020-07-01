@@ -509,22 +509,8 @@ class MuteMixin(MixinMeta):
         async with self.__config.muted() as muted:
           if user in muted[guildid]:
                del muted[guildid][user]
-
-
-    @commands.group()
-    async def role(self, ctx: commands.Context):
-        """Temp mutes role"""
-        pass
-
-    @commands.bot_has_permissions(manage_roles=True)
-    @checks.mod_or_permissions(manage_channels=True)
-    @rolemute.command(name=roleset)
-    async def roleset(self, ctx, role: discord.Role):
-        """Set a mute role."""
-        await self.__config.guild(ctx.guild).muterole.set(role.id)
-        await ctx.send("The muted role has been set to {}".format(role.name))
-
-    
+               
+#code for mute role
     @checks.mod_or_permissions(manage_roles=True)
     @checks.bot_has_permissions(manage_roles=True)
     @commands.group(invoke_without_command=True)
@@ -626,6 +612,20 @@ class MuteMixin(MixinMeta):
             await ctx.send(
                 f"{len(failed)} user{'s' if len(failed) > 1 else ''} failed to be muted for the following reasons.{failemsg}"
             )        
+#commands
+    @commands.group()
+    async def role(self, ctx: commands.Context):
+        """Temp mutes role"""
+        pass
+
+    @commands.bot_has_permissions(manage_roles=True)
+    @checks.mod_or_permissions(manage_channels=True)
+    @rolemute.command(name=roleset)
+    async def roleset(self, ctx, role: discord.Role):
+        """Set a mute role."""
+        await self.__config.guild(ctx.guild).muterole.set(role.id)
+        await ctx.send("The muted role has been set to {}".format(role.name))
+
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
