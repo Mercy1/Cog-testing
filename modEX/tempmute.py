@@ -250,7 +250,7 @@ class TempMutes(MixinMeta):
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @rolemute.command(name=roleset)
+    @rolemute.command()
     async def roleset(self, ctx, role: discord.Role):
         """Set a mute role."""
         await self.__config.guild(ctx.guild).muterole.set(role.id)
