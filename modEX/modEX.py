@@ -16,7 +16,7 @@ from .mutes import MuteMixin
 from .names import ModInfo
 from .slowmode import Slowmode
 from .settings import ModSettings
-from .tempmute import TempMutes
+from .tempmute import tempmute
 _ = T_ = Translator("Mod", __file__)
 
 __version__ = "1.1.0"
