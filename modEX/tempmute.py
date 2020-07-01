@@ -8,7 +8,7 @@ from typing import Optional
 from redbot.core.commands.converter import TimedeltaConverter #sin add
 from redbot.core.utils.predicates import MessagePredicate #sin add
 from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
-from redbot.core import commands, Config, checks, utils
+from redbot.core import commands, Config, checks, utils, i18n
 from .abc import MixinMeta
 
 _ = i18n.Translator("Mod", __file__)
