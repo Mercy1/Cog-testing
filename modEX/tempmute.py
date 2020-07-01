@@ -148,7 +148,7 @@ class TempMutes(MixinMeta):
         self,
         ctx,
         users: commands.Greedy[discord.Member],
-        duration: Optional[start_time = datetime.datetime.fromtimestamp(rolemute["duration"]).strftime(self.time_format)] = None,
+        duration: Optional[TimedeltaConverter] = None,
         *,
         reason: str = None,
     ):
