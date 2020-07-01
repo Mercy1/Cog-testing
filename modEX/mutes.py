@@ -629,7 +629,7 @@ class MuteMixin(MixinMeta):
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
-    @role.command(name=unmute)     
+    #@role.command(name=unmute) not needed?     
     @commands.group(invoke_without_command=True, name="roleunmute")
     async def _roleunmute(self, ctx, moderator:discord.member, users: commands.Greedy[discord.Member]):
         """Unmute users."""
