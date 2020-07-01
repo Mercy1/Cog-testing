@@ -10,7 +10,7 @@ from redbot.core.utils.predicates import MessagePredicate #sin add
 from redbot.core.utils.chat_formatting import humanize_list, humanize_timedelta #sin added last 2
 from redbot.core import commands, Config, checks, utils
 from .abc import MixinMeta
-from .settings import respect_hierarchy
+from .settings import respecthierarchy
 
 log = logging.getLogger("red.Shino-cogs.tempmuute")
 
