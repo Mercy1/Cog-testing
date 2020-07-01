@@ -36,7 +36,7 @@ class ModEX(
     ModSettings,
     Events,
     KickBanMixin,
-    TempMutes,
+    tempmute,
     MoveToCore,
     MuteMixin,
     ModInfo,
