@@ -469,7 +469,7 @@ class MuteMixin(MixinMeta):
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
 
-#Sinon's code timed mutes below
+    #Sinon's code timed mutes below
 
     async def unmute_loop(self):
         while True:
@@ -480,8 +480,8 @@ class MuteMixin(MixinMeta):
                         await self.unmute(user, guild)
             await asyncio.sleep(15)
 
-#code for unmute loop
-    async def roleunmute(self, user, users:commands.Greedy[discord.Member], guildid, *, moderator: discord.Member = None):
+        #code for unmute loop
+    async def roleunmute(self, user, guildid, *, moderator: discord.Member = None):
         guild = self.bot.get_guild(int(guildid))
         if guild is None:
             return
@@ -496,7 +496,7 @@ class MuteMixin(MixinMeta):
                 await member.remove_roles(muterole, reason="Unmuted by {}.".format(moderator))
                 modlog.info("Unmuted {} in {} by {}.".format(member, guild, moderator))
             await modlog.create_case(
-                self.bot,
+               self.bot,
                 guild,
                 datetime.utcnow(),
                 "sunmute",
@@ -507,49 +507,49 @@ class MuteMixin(MixinMeta):
         else:
             modlog.info("{} is no longer in {}, removing from muted list.".format(user, guild))
         async with self.__config.muted() as muted:
-            if user in muted[guildid]:
-                del muted[guildid][user]
+          if user in muted[guildid]:
+               del muted[guildid][user]
 
 
-@commands.group()
-async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
+    @commands.group()
+    async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
         duration: Optional[TimedeltaConverter] = None,
         *,
         reason: str = None,):
         pass
 
-        @commands.bot_has_permissions(manage_roles=True)
-        @checks.mod_or_permissions(manage_channels=True)
-        @rolemute.command()
-        async def roleset(self, ctx, role: discord.Role):
-            """Set a mute role."""
-            await self.__config.guild(ctx.guild).muterole.set(role.id)
-            await ctx.send("The muted role has been set to {}".format(role.name))
+    @commands.bot_has_permissions(manage_roles=True)
+    @checks.mod_or_permissions(manage_channels=True)
+    @rolemute.command()
+    async def roleset(self, ctx, role: discord.Role):
+        """Set a mute role."""
+        await self.__config.guild(ctx.guild).muterole.set(role.id)
+        await ctx.send("The muted role has been set to {}".format(role.name))
 
-        @commands.bot_has_permissions(manage_roles=True)
-        @checks.mod_or_permissions(manage_channels=True)     
-        @commands.group(invoke_without_command=True, name="roleunmute")
-        async def _roleunmute(self, ctx, users: commands.Greedy[discord.Member]):
-            """Unmute users."""
+    @commands.bot_has_permissions(manage_roles=True)
+    @checks.mod_or_permissions(manage_channels=True)     
+    @commands.group(invoke_without_command=True, name="roleunmute")
+    async def _roleunmute(self, ctx, moderator:discord.member, users: commands.Greedy[discord.Member]):
+        """Unmute users."""
         muted = await self.__config.muted()
         for user in users:
             if str(ctx.guild.id) not in muted:
                 return await ctx.send("There is nobody currently muted in this server.")
-            await self.unmute(str(user.id), str(ctx.guild.id), moderator=ctx.author)
-            await ctx.tick()           
+        await self.unmute(str(user.id), str(ctx.guild.id))
+        await ctx.tick()           
 
-        @commands.bot_has_permissions(manage_roles=True)
-        @checks.mod_or_permissions(manage_channels=True)
-        @rolemute.command(name="list")
-        async def _list(self, ctx):
-            """List those who are muted."""
-            muted = await self.__config.muted()
-            guildmuted = muted.get(str(ctx.guild.id))
-            if guildmuted is None:
-                return await ctx.send("There is currently nobody muted in {}".format(ctx.guild))
-            msg = ""
-            for user in guildmuted:
-                expiry = datetime.fromtimestamp(guildmuted[user]["expiry"]) - datetime.now()
-                msg += f"{self.bot.get_user(int(user)).mention} is muted for {humanize_timedelta(timedelta=expiry)}\n"
-            await ctx.maybe_send_embed(msg if msg else "Nobody is currently muted.")
+    @commands.bot_has_permissions(manage_roles=True)
+    @checks.mod_or_permissions(manage_channels=True)
+    @rolemute.command(name="list")
+    async def _list(self, ctx):
+        """List those who are muted."""
+        muted = await self.__config.muted()
+        guildmuted = muted.get(str(ctx.guild.id))
+        if guildmuted is None:
+            return await ctx.send("There is currently nobody muted in {}".format(ctx.guild))
+        msg = ""
+        for user in guildmuted:
+            expiry = datetime.fromtimestamp(guildmuted[user]["expiry"]) - datetime.now()
+            msg += f"{self.bot.get_user(int(user)).mention} is muted for {humanize_timedelta(timedelta=expiry)}\n"
+        await ctx.maybe_send_embed(msg if msg else "Nobody is currently muted.")
 # thank god this took time ^^        
