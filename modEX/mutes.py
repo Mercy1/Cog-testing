@@ -3,7 +3,7 @@ from typing import cast, Optional
 
 import logging #Sin add
 import discord
-from redbot.core import commands, checks, i18n, modlog
+from redbot.core import commands, checks, i18n, modlog, Config
 from redbot.core.utils.chat_formatting import format_perms_list, humanize_list, humanize_timedelta #sin added last 2
 from redbot.core.utils.mod import get_audit_reason, is_allowed_by_hierarchy
 from redbot.core.commands.converter import TimedeltaConverter #sin add
@@ -467,9 +467,33 @@ class MuteMixin(MixinMeta):
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
 
+class tempmute(MixinMeta):
+    """
+    Stuff for timed mutes goes here
+    """
     #Sinon's code timed mutes below
+    def __init__(self, bot):
+        super().__init__(bot)
+        self.bot = bot
+        self.__config = Config.get_conf(
+            self, identifier=95932766180343808, force_registration=True
+        )
+        defaultsguild = {"muterole": None, "respect_hierarchy": True}
+        defaults = {"muted": {}}
+        self.__config.register_guild(**defaultsguild)
+        self.__config.register_global(**defaults)
+        self.loop = bot.loop.create_task(self.roleunmute_loop())
 
-    async def unmute_loop(self):
+    # Removes main mods mute commands.
+    voice_mute = None
+    channel_mute = None
+    guild_mute = None
+    unmute_voice = None
+    unmute_channel = None
+    unmute_guild = None
+    # ban = None # TODO: Merge hackban and ban.
+
+    async def roleunmute_loop(self):
         while True:
             muted = await self.__config.muted()
             for guild in muted:
