@@ -8,6 +8,7 @@ from redbot.core.utils.chat_formatting import format_perms_list, humanize_list, 
 from redbot.core.utils.mod import get_audit_reason, is_allowed_by_hierarchy
 from redbot.core.commands.converter import TimedeltaConverter #sin add
 from datetime import datetime, timedelta #sin add
+from redbot.core.utils.predicates import MessagePredicate #sin add
 from .abc import MixinMeta
 
 T_ = i18n.Translator("Mod", __file__)
@@ -467,10 +468,12 @@ class MuteMixin(MixinMeta):
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
 
+
 class tempmute(MixinMeta):
     """
     Stuff for timed mutes goes here
     """
+    
     #Sinon's code timed mutes below
     def config (self,bot):
         self.__config = Config.get_conf(
@@ -530,6 +533,122 @@ class tempmute(MixinMeta):
           if user in muted[guildid]:
                del muted[guildid][user]
 
+    async def create_muted_role(self, guild):
+        muted_role = await guild.create_role(
+            name="Muted", reason="Muted role created for timed mutes."
+        )
+        await self.__config.guild(guild).muterole.set(muted_role.id)
+        o = discord.PermissionOverwrite(send_messages=False, add_reactions=False, connect=False)
+        for channel in guild.channels:
+            mr_overwrite = channel.overwrites.get(muted_role)
+            if not mr_overwrite or o != mr_overwrite:
+                await channel.set_permissions(
+                    muted_role,
+                    overwrite=o,
+                    reason="Ensures that Muted users won't be able to talk here.",
+                )
+
+    @checks.mod_or_permissions(manage_roles=True)
+    @checks.bot_has_permissions(manage_roles=True)
+    @commands.group(invoke_without_command=True)
+    async def mute(
+        self,
+        ctx,
+        users: commands.Greedy[discord.Member],
+        duration: Optional[TimedeltaConverter] = None,
+        *,
+        reason: str = None,
+    ):
+        """Mute users."""
+        if not users:
+            return await ctx.send_help()
+        if duration is None:
+            duration = timedelta(minutes=10)
+        duration_seconds = duration.total_seconds()
+        guild = ctx.guild
+        roleid = await self.__config.guild(guild).muterole()
+        if roleid is None:
+            await ctx.send(
+                "There is currently no mute role set for this server. If you would like one to be automatically setup then type yes, otherwise type no then one can be set via {}mute roleset <role>".format(
+                    ctx.prefix
+                )
+            )
+            try:
+                pred = MessagePredicate.yes_or_no(ctx, user=ctx.author)
+                msg = await ctx.bot.wait_for("message", check=pred, timeout=60)
+            except asyncio.TimeoutError:
+                return await ctx.send("Alright, cancelling the operation.")
+
+            if pred.result:
+                await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+                await self.create_muted_role(guild)
+                roleid = await self.__config.guild(guild).muterole()
+            else:
+                await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
+                return
+        mutedrole = guild.get_role(roleid)
+        if mutedrole is None:
+            return await ctx.send(
+                f"The mute role for this server is invalid. Please set one up using {ctx.prefix}mute roleset <role>."
+            )
+        completed = []
+        failed = []
+        async with self.__config.muted() as muted:
+            if str(ctx.guild.id) not in muted:
+                muted[str(ctx.guild.id)] = {}
+            for user in users:
+                if user == ctx.author:
+                    failed.append(f"{user} - Self harm is bad.")
+                    continue
+                if not await is_allowed_by_hierarchy(
+                    self.bot, self.__config, guild, ctx.author, user
+                ):
+                    failed.append(
+                        f"{user} - You are not higher than this user in the role hierarchy"
+                    )
+                    continue
+                if guild.me.top_role <= user.top_role or user == guild.owner:
+                    failed.append(
+                        f"{user} - Discord hierarcy rules prevent you from muting this user."
+                    )
+                    continue
+                await user.add_roles(
+                    mutedrole,
+                    reason="Muted by {} for {}{}".format(
+                        ctx.author,
+                        humanize_timedelta(timedelta=duration),
+                        f" | Reason: {reason}" if reason is not None else "",
+                    ),
+                )
+                expiry = datetime.now() + timedelta(seconds=duration_seconds)
+                muted[str(ctx.guild.id)][str(user.id)] = {
+                    "time": datetime.now().timestamp(),
+                    "expiry": expiry.timestamp(),
+                }
+                await modlog.create_case(
+                    ctx.bot,
+                    ctx.guild,
+                    ctx.message.created_at,
+                    "smute",
+                    user,
+                    ctx.author,
+                    reason,
+                    expiry,
+                )
+                modlog.info(
+                    f"{user} muted by {ctx.author} in {ctx.guild} for {humanize_timedelta(timedelta=duration)}"
+                )
+                completed.append(user)
+        msg = "{}".format("\n**Reason**: {}".format(reason) if reason is not None else "")
+        if completed:
+            await ctx.send(
+                f"`{humanize_list([str(x) for x in completed])}` has been muted for {humanize_timedelta(timedelta=duration)}.{msg}"
+            )
+        if failed:
+            failemsg = "\n{}".format("\n".join(failed))
+            await ctx.send(
+                f"{len(failed)} user{'s' if len(failed) > 1 else ''} failed to be muted for the following reasons.{failemsg}"
+            )
 
     @commands.group()
     async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
