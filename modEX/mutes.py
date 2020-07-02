@@ -10,6 +10,7 @@ from redbot.core.commands.converter import TimedeltaConverter #sin add
 from datetime import datetime, timedelta #sin add
 from redbot.core.utils.predicates import MessagePredicate #sin add
 from .abc import MixinMeta
+from redbot.core.bot import Red
 
 T_ = i18n.Translator("Mod", __file__)
 
@@ -473,9 +474,10 @@ class TempMutes(MixinMeta):
     """Temp mute stuff"""
     
     #Sinon's code timed mutes below
-    def __init__(self, bot):
-        super().__init__(bot)
-        self.bot = bot
+    def __init__(self, bot, *_args):
+        self.settings: Config
+        self.bot: Red
+        self.cache: dict
         self.__config = Config.get_conf(
             self, identifier=95932766180343808, force_registration=True
         )
