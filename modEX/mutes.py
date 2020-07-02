@@ -472,9 +472,7 @@ class tempmute(MixinMeta):
     Stuff for timed mutes goes here
     """
     #Sinon's code timed mutes below
-    def __init__(self, Red):
-        super().__init__(Red)
-        self.bot = Red
+    def config (self,bot):
         self.__config = Config.get_conf(
             self, identifier=95932766180343808, force_registration=True
         )
@@ -482,7 +480,7 @@ class tempmute(MixinMeta):
         defaults = {"muted": {}}
         self.__config.register_guild(**defaultsguild)
         self.__config.register_global(**defaults)
-        self.loop = Red.loop.create_task(self.roleunmute_loop())
+        self.loop = bot.loop.create_task(self.roleunmute_loop())
 
     # Removes main mods mute commands.
     voice_mute = None
