@@ -13,6 +13,7 @@ from .events import Events
 from .kickban import KickBanMixin
 from .movetocore import MoveToCore
 from .mutes import MuteMixin
+from .mutes import TempMutes
 from .names import ModInfo
 from .slowmode import Slowmode
 from .settings import ModSettings
@@ -38,6 +39,7 @@ class ModEX(
     KickBanMixin,
     MoveToCore,
     MuteMixin,
+    TempMutes,
     ModInfo,
     Slowmode,
     commands.Cog,
