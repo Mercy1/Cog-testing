@@ -467,12 +467,15 @@ class MuteMixin(MixinMeta):
         else:
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
+
 class TempMutes(MixinMeta):
         
     """Temp mute stuff"""
     
     #Sinon's code timed mutes below
-    def config (self,bot):
+    def __init__(self, bot):
+        super().__init__(bot)
+        self.bot = bot
         self.__config = Config.get_conf(
             self, identifier=95932766180343808, force_registration=True
         )
@@ -480,7 +483,7 @@ class TempMutes(MixinMeta):
         defaults = {"muted": {}}
         self.__config.register_guild(**defaultsguild)
         self.__config.register_global(**defaults)
-        self.loop = bot.loop.create_task(self.roleunmute_loop())
+        self.loop = bot.loop.create_task(self.unmute_loop())
 
     # Removes main mods mute commands.
     voice_mute = None
