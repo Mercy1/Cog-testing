@@ -468,6 +468,9 @@ class MuteMixin(MixinMeta):
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
 
+class TempMutes(MixinMeta):
+    
+    """Temp mute stuff"""
     
     #Sinon's code timed mutes below
     def config (self,bot):
