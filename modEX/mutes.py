@@ -471,13 +471,13 @@ class MuteMixin(MixinMeta):
     
     #Sinon's code timed mutes below
     def config (self,bot):
-        self.__config = Config.get_conf(
+        self._maybe_update_config = Config.get_conf(
             self, identifier=95932766180343808, force_registration=True
         )
         defaultsguild = {"muterole": None, "respect_hierarchy": True}
         defaults = {"muted": {}}
-        self.__config.register_guild(**defaultsguild)
-        self.__config.register_global(**defaults)
+        self._maybe_update_config.register_guild(**defaultsguild)
+        self._maybe_update_config.register_global(**defaults)
         self.loop = bot.loop.create_task(self.roleunmute_loop())
 
     # Removes main mods mute commands.
@@ -491,7 +491,7 @@ class MuteMixin(MixinMeta):
 
     async def roleunmute_loop(self):
         while True:
-            muted = await self.__config.muted()
+            muted = await self._maybe_update_config.muted()
             for guild in muted:
                 for user in muted[guild]:
                     if datetime.fromtimestamp(muted[guild][user]["expiry"]) < datetime.now():
@@ -503,7 +503,7 @@ class MuteMixin(MixinMeta):
         guild = self.bot.get_guild(int(guildid))
         if guild is None:
             return
-        mutedroleid = await self.__config.guild(guild).muterole()
+        mutedroleid = await self._maybe_update_config.guild(guild).muterole()
         muterole = guild.get_role(mutedroleid)
         member = guild.get_member(int(user))
         if member is not None:
@@ -524,7 +524,7 @@ class MuteMixin(MixinMeta):
             )
         else:
             modlog.info("{} is no longer in {}, removing from muted list.".format(user, guild))
-        async with self.__config.muted() as muted:
+        async with self._maybe_update_config.muted() as muted:
           if user in muted[guildid]:
                del muted[guildid][user]
 
@@ -532,7 +532,7 @@ class MuteMixin(MixinMeta):
         muted_role = await guild.create_role(
             name="Muted", reason="Muted role created for timed mutes."
         )
-        await self.__config.guild(guild).muterole.set(muted_role.id)
+        await self._maybe_update_config.guild(guild).muterole.set(muted_role.id)
         o = discord.PermissionOverwrite(send_messages=False, add_reactions=False, connect=False)
         for channel in guild.channels:
             mr_overwrite = channel.overwrites.get(muted_role)
@@ -561,7 +561,7 @@ class MuteMixin(MixinMeta):
             duration = timedelta(minutes=10)
         duration_seconds = duration.total_seconds()
         guild = ctx.guild
-        roleid = await self.__config.guild(guild).muterole()
+        roleid = await self._maybe_update_config.guild(guild).muterole()
         if roleid is None:
             await ctx.send(
                 "There is currently no mute role set for this server. If you would like one to be automatically setup then type yes, otherwise type no then one can be set via {}mute roleset <role>".format(
@@ -577,7 +577,7 @@ class MuteMixin(MixinMeta):
             if pred.result:
                 await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
                 await self.create_muted_role(guild)
-                roleid = await self.__config.guild(guild).muterole()
+                roleid = await self._maybe_update_config.guild(guild).muterole()
             else:
                 await msg.add_reaction("\N{WHITE HEAVY CHECK MARK}")
                 return
@@ -588,7 +588,7 @@ class MuteMixin(MixinMeta):
             )
         completed = []
         failed = []
-        async with self.__config.muted() as muted:
+        async with self._maybe_update_config.muted() as muted:
             if str(ctx.guild.id) not in muted:
                 muted[str(ctx.guild.id)] = {}
             for user in users:
@@ -596,7 +596,7 @@ class MuteMixin(MixinMeta):
                     failed.append(f"{user} - Self harm is bad.")
                     continue
                 if not await is_allowed_by_hierarchy(
-                    self.bot, self.__config, guild, ctx.author, user
+                    self.bot, self._maybe_update_config, guild, ctx.author, user
                 ):
                     failed.append(
                         f"{user} - You are not higher than this user in the role hierarchy"
@@ -657,7 +657,7 @@ class MuteMixin(MixinMeta):
     @rolemute.command()
     async def roleset(self, ctx, role: discord.Role):
         """Set a mute role."""
-        await self.__config.guild(ctx.guild).muterole.set(role.id)
+        await self._maybe_update_config.guild(ctx.guild).muterole.set(role.id)
         await ctx.send("The muted role has been set to {}".format(role.name))
 
     @commands.bot_has_permissions(manage_roles=True)
@@ -665,7 +665,7 @@ class MuteMixin(MixinMeta):
     @commands.group(invoke_without_command=True, name="roleunmute")
     async def _roleunmute(self, ctx, moderator:discord.member, users: commands.Greedy[discord.Member]):
         """Unmute users."""
-        muted = await self.__config.muted()
+        muted = await self._maybe_update_config.muted()
         for user in users:
             if str(ctx.guild.id) not in muted:
                 return await ctx.send("There is nobody currently muted in this server.")
@@ -677,7 +677,7 @@ class MuteMixin(MixinMeta):
     @rolemute.command(name="list")
     async def _list(self, ctx):
         """List those who are muted."""
-        muted = await self.__config.muted()
+        muted = await self._maybe_update_config.muted()
         guildmuted = muted.get(str(ctx.guild.id))
         if guildmuted is None:
             return await ctx.send("There is currently nobody muted in {}".format(ctx.guild))
