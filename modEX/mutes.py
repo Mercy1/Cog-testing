@@ -468,11 +468,6 @@ class MuteMixin(MixinMeta):
             await self.settings.member(user).clear_raw("perms_cache", str(channel.id))
             return True, None
 
-
-class tempmute(MixinMeta):
-    """
-    Stuff for timed mutes goes here
-    """
     
     #Sinon's code timed mutes below
     def config (self,bot):
@@ -551,7 +546,7 @@ class tempmute(MixinMeta):
     @checks.mod_or_permissions(manage_roles=True)
     @checks.bot_has_permissions(manage_roles=True)
     @commands.group(invoke_without_command=True)
-    async def mute(
+    async def rolemute(
         self,
         ctx,
         users: commands.Greedy[discord.Member],
@@ -650,12 +645,12 @@ class tempmute(MixinMeta):
                 f"{len(failed)} user{'s' if len(failed) > 1 else ''} failed to be muted for the following reasons.{failemsg}"
             )
 
-    @commands.group()
-    async def rolemute(self, ctx, users: commands.Greedy[discord.Member],
-        duration: Optional[TimedeltaConverter] = None,
-        *,
-        reason: str = None,):
-        pass
+    #@commands.group()
+    #async def mute(self, ctx, users: commands.Greedy[discord.Member],
+    #    duration: Optional[TimedeltaConverter] = None,
+    #    *,
+    #    reason: str = None,):
+    #    pass
 
     @commands.bot_has_permissions(manage_roles=True)
     @checks.mod_or_permissions(manage_channels=True)
