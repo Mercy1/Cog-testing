@@ -312,9 +312,9 @@ class LOACog(commands.Cog):
         if msg.content.lower().strip() in ["exit", "cancel", "stop", "no"]:
             return await ctx.maybe_send_embed("LOA Submission Cancelled.")
         enddate = await Time.fromString(msg.content)
-        if enddate is None:
+        if enddate < 2 :
             enddate = await Date.fromString(msg.content)
-        if enddate < 3:
+        if enddate is None:
             return await ctx.maybe_send_embed("Unable to parse End Date.")
         await ctx.maybe_send_embed(
             "Enter your reason for your LOA." + "\n" "Enter *`cancel`* to cancel submission."
