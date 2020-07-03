@@ -180,7 +180,7 @@ class LOACog(commands.Cog):
         channel = ctx.message.channel
         if reason is None:
             return await ctx.maybe_send_embed("You must provide a reason for your LOA.")
-        if startdate > 2:
+        if startdate is None:
             start_time = datetime.datetime.utcnow()
             delay = 0
         else:
@@ -314,7 +314,7 @@ class LOACog(commands.Cog):
         enddate = await Time.fromString(msg.content)
         if enddate is None:
             enddate = await Date.fromString(msg.content)
-        if enddate is None:
+        if enddate < 3:
             return await ctx.maybe_send_embed("Unable to parse End Date.")
         await ctx.maybe_send_embed(
             "Enter your reason for your LOA." + "\n" "Enter *`cancel`* to cancel submission."
