@@ -97,6 +97,8 @@ class Gallery(commands.Cog):
             return
         if not message.guild:
             return
+        if message.isDomainAllowed:
+            return
         if message.channel.id not in await self.config.guild(message.guild).channels():
             return
         if not message.attachments:
