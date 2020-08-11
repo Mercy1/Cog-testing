@@ -107,7 +107,7 @@ class Gallery(commands.Cog):
                 youtube = ["^(https?|mms)://([^/]+[.])?(?i:youtube[.]com)(/.*)?$"]
                 if extension in imageTypes:
                     return
-                if extension in youtube:
+                if uri in youtube:
                     return
             rid = await self.config.guild(message.guild).whitelist()
             time = await self.config.guild(message.guild).time()
