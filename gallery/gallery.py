@@ -22,7 +22,7 @@ class Gallery(commands.Cog):
         )
 
         self.config.register_guild(channels=[], whitelist=None, time=0)
-    
+        
     def isDomainAllowed(self, url):
         domain = 'youtube.com/'
         match = re.search(r'youtube.com/', url)
@@ -97,7 +97,7 @@ class Gallery(commands.Cog):
             return
         if not message.guild:
             return
-        if message.isDomainAllowed:
+        if not message.isDomainAllowed:
             return
         if message.channel.id not in await self.config.guild(message.guild).channels():
             return
