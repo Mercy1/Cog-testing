@@ -92,9 +92,9 @@ class Gallery(commands.Cog):
             return
         if message.channel.id not in await self.config.guild(message.guild).channels():
             return
-        if message.attachments:
+        if not message.attachments:
             uris = re.findall(
-                "^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+",
+                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+?youtube\.com/watch\?v=",
                 message.content,
             )
             if len(uris) == 1:
