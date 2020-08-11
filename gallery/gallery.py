@@ -85,6 +85,9 @@ class Gallery(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        user = message.author
+        if user.bot:
+            return
         if not message.guild:
             return
         if message.channel.id not in await self.config.guild(message.guild).channels():
@@ -99,7 +102,7 @@ class Gallery(commands.Cog):
                 uri = uri.split("?")[0]
                 parts = uri.split(".")
                 extension = parts[-1]
-                imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp",".mp4"]
+                imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm", "https://www.youtube.com/"]
                 if extension in imageTypes:
                     return
             rid = await self.config.guild(message.guild).whitelist()
