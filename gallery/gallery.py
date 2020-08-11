@@ -103,7 +103,7 @@ class Gallery(commands.Cog):
                 parts = uri.split(".")
                 extension = parts[-1]
                 imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm"]
-                Youtube = ["^([a-z|A-Z])+?://([^/]+[.])?(youtube[.]com|YOUTUBE[.]COM)?(/.*)?$"]
+                Youtube = ["^([a-zA-Z0-9]+\.)*youtube\.com\/?.*"]
                 if extension in imageTypes or Youtube:
                     return
             rid = await self.config.guild(message.guild).whitelist()
