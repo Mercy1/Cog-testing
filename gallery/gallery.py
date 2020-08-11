@@ -23,6 +23,12 @@ class Gallery(commands.Cog):
 
         self.config.register_guild(channels=[], whitelist=None, time=0)
     
+    def Youtube(self, url):
+        domain = 'youtube.com/'
+    match = re.search(r'youtube.com/', url)
+    if match and match.group() == domain:
+        return True
+    return False
 
     @commands.command()
     @commands.guild_only()
@@ -89,6 +95,8 @@ class Gallery(commands.Cog):
         user = message.author
         if user.bot:
             return
+        if Youtube:
+            return
         if not message.guild:
             return
         if message.channel.id not in await self.config.guild(message.guild).channels():
@@ -104,10 +112,7 @@ class Gallery(commands.Cog):
                 parts = uri.split(".")
                 extension = parts[-1]
                 imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm"]
-                youtube = ["^(https?|mms)://([^/]+[.])?(?i:youtube[.]com)(/.*)?$"]
                 if extension in imageTypes:
-                    return
-                if uri in youtube:
                     return
             rid = await self.config.guild(message.guild).whitelist()
             time = await self.config.guild(message.guild).time()
