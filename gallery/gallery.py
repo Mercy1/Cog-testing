@@ -24,11 +24,8 @@ class Gallery(commands.Cog):
         self.config.register_guild(channels=[], whitelist=None, time=0)
         
     def isDomainAllowed(self, youtube):
-        domain = 'youtube.com/'
-        match = re.search(r'youtube.com/', youtube)
-        if match and match.group() == domain:
-            return True
-        return False
+        '^([a-z|A-Z])+?://([^/]+[.])?(youtube[.]com|YOUTUBE[.]COM)?(/.*)?$'
+        
 
     @commands.command()
     @commands.guild_only()
