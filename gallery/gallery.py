@@ -88,13 +88,15 @@ class Gallery(commands.Cog):
         user = message.author
         if user.bot:
             return
+        if message.youtube:
+            return
         if not message.guild:
             return
         if message.channel.id not in await self.config.guild(message.guild).channels():
             return
         if not message.attachments:
             uris = re.findall(
-                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                "http[s]?://(?:|(?:youtube.com/|[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F])))+",
                 message.content,
             )
             if len(uris) == 1:
@@ -103,8 +105,8 @@ class Gallery(commands.Cog):
                 parts = uri.split(".")
                 extension = parts[-1]
                 imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm"]
-                youtube = ["^([a-zA-Z0-9]+\.)*youtube\.com\/?.*"]
-                if extension in imageTypes or youtube:
+                Youtube = ["^([a-z|A-Z])+?://([^/]+[.])?(youtube[.]com|YOUTUBE[.]COM)?(/.*)?$"]
+                if extension in imageTypes or Youtube:
                     return
             rid = await self.config.guild(message.guild).whitelist()
             time = await self.config.guild(message.guild).time()
