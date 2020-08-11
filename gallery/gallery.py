@@ -94,7 +94,7 @@ class Gallery(commands.Cog):
             return
         if not message.attachments:
             uris = re.findall(
-                "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+?youtube\.com/watch\?v=",
+                "(?!\S+youtube\.com)((?<!\S)(((f|ht){1}tp[s]?:\/\/|(?<!\S)www\.)[-a-zA-Z0-9@:%_\+.~#?&\/\/=]+))",
                 message.content,
             )
             if len(uris) == 1:
