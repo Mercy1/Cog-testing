@@ -104,7 +104,7 @@ class Gallery(commands.Cog):
                 parts = uri.split(".")
                 extension = parts[-1]
                 imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm"]
-                youtube = ["youtube.com/"]
+                youtube = ["^(https?|mms)://([^/]+[.])?(?i:youtube[.]com)(/.*)?$"]
                 if extension in imageTypes:
                     return
                 if extension in youtube:
