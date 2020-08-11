@@ -21,11 +21,7 @@ class Gallery(commands.Cog):
             self, identifier=564154651321346431, force_registration=True
         )
 
-        self.config.register_guild(channels=[], whitelist=None, time=0)
-        
-    def isDomainAllowed(self, youtube):
-        '^([a-z|A-Z])+?://([^/]+[.])?(youtube[.]com|YOUTUBE[.]COM)?(/.*)?$'
-        
+        self.config.register_guild(channels=[], whitelist=None, time=0)        
 
     @commands.command()
     @commands.guild_only()
@@ -94,8 +90,6 @@ class Gallery(commands.Cog):
             return
         if not message.guild:
             return
-        if not message.isDomainAllowed:
-            return
         if message.channel.id not in await self.config.guild(message.guild).channels():
             return
         if not message.attachments:
@@ -109,7 +103,8 @@ class Gallery(commands.Cog):
                 parts = uri.split(".")
                 extension = parts[-1]
                 imageTypes = ["jpg", "jpeg", "tiff", "png", "gif", "bmp", "mp4", "webm"]
-                if extension in imageTypes:
+                Youtube = ["^([a-z|A-Z])+?://([^/]+[.])?(youtube[.]com|YOUTUBE[.]COM)?(/.*)?$"]
+                if extension in imageTypes or Youtube:
                     return
             rid = await self.config.guild(message.guild).whitelist()
             time = await self.config.guild(message.guild).time()
