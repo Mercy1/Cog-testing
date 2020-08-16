@@ -1,0 +1,16 @@
+{
+  "author": [
+    " Main code -flare#0001 + red core mod, edits/command change- Sinon#6302"
+  ],
+  "install_msg": "This cog subclasses core Mod and adds timed mute which uses roles..",
+  "name": "Temp Mute",
+  "disabled": false,
+  "short": "An add on/ name and command change to core Mod with timed role mutes.",
+  "description": "Core mod with the inclusion of timed role mutes.",
+  "tags": [
+    "mute",
+    "temp mute",
+    "rolemute"
+  ],
+  "hidden": false
+}
