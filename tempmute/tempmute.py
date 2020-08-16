@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import discord
-from discord.ext import commands
 from redbot.cogs.mod import Mod as tempmute
 from redbot.core import Config, checks, commands, modlog
 from redbot.core.commands.converter import TimedeltaConverter
@@ -22,7 +21,7 @@ from .settings import ModSettings
 log = logging.getLogger("red.Shino-cogs.tempmute")
 
 
-class tempmute(tempmute):
+class tempmute(tempmute, commands.Cog):
     """Mod with timed mute."""
 
     __version__ = "1.1.4"
