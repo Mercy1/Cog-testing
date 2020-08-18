@@ -12,17 +12,16 @@ class Gallery(commands.Cog):
     Gallery channels!
     """
 
-    __author__ = "saurichable"
-    __version__ = "1.2.1"
+    __author__ = "saurichable, [Edit's] Sinon"
+    __version__ = "1.2.1.E"
 
     def __init__(self, bot: Red):
         self.bot = bot
         self.config = Config.get_conf(
             self, identifier=564154651321346431, force_registration=True
         )
-    
-        self.config.register_guild(channels=[], whitelist=None, time=0)   
-        
+
+        self.config.register_guild(channels=[], whitelist=None, time=0)        
     async def red_get_data_for_user(self, *, user_id: int):
         # this cog does not story any data
         return {}
@@ -98,7 +97,7 @@ class Gallery(commands.Cog):
             return
         if not message.attachments:
             uris = re.findall(
-                "(?=\S+youtube\.com|\S+tenor\.com|\S+\.mov|\S+\.jpg|\S+\.jpeg|\S+\.tiff|\S+\.gif|\S+\.bmp|\S+\.mp4|\S+\.webm|\S+\.png)((?<!\S)(((f|ht){1}tp[s]?:\/\/|(?<!\S)www\.)[-a-zA-Z0-9@:%_\+.~#?&\/\/=]+))",
+                "(?=\S+youtube\.com|\S+youtu\.be\/|\S+tenor\.com|\S+\.mov|\S+\.jpg|\S+\.jpeg|\S+\.tiff|\S+\.gif|\S+\.bmp|\S+\.mp4|\S+\.webm|\S+\.png)((?<!\S)(((f|ht){1}tp[s]?:\/\/|(?<!\S)www\.)[-a-zA-Z0-9@:%_\+.~#?&\/\/=]+))",
                 message.content,
             )
             if len(uris) == 1:
