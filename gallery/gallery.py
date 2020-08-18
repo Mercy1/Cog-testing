@@ -20,8 +20,12 @@ class Gallery(commands.Cog):
         self.config = Config.get_conf(
             self, identifier=564154651321346431, force_registration=True
         )
-
-        self.config.register_guild(channels=[], whitelist=None, time=0)        
+    
+        self.config.register_guild(channels=[], whitelist=None, time=0)   
+        
+    async def red_get_data_for_user(self, *, user_id: int):
+        # this cog does not story any data
+        return {}
 
     @commands.command()
     @commands.guild_only()
