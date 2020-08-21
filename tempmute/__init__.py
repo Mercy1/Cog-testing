@@ -1,7 +1,7 @@
-from .tempmute import tempmute
+from .tempmute import timedmutes
 
 
 async def setup(bot):
-    cog = tempmute(bot)
+    cog = timedmutes(bot)
     bot.add_cog(cog)
     await cog.initialize()
