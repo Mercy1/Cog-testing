@@ -12,9 +12,9 @@ from typing import Optional, Union
 
 def from_NWStaff_guild(ctx):
     if type(ctx) == commands.Context:
-        return ctx.guild.id == 420530084294688775
+        return ctx.guild.id == 373769237371682817
     elif type(ctx) == discord.Guild:
-        return ctx.id == 420530084294688775
+        return ctx.id == 373769237371682817
     else:
         return False
 
@@ -312,7 +312,7 @@ class LOACog(commands.Cog):
         if msg.content.lower().strip() in ["exit", "cancel", "stop", "no"]:
             return await ctx.maybe_send_embed("LOA Submission Cancelled.")
         enddate = await Time.fromString(msg.content)
-        if enddate < 2 :
+        if enddate is None:
             enddate = await Date.fromString(msg.content)
         if enddate is None:
             return await ctx.maybe_send_embed("Unable to parse End Date.")
@@ -512,32 +512,32 @@ class LOACog(commands.Cog):
 
     async def restart_loas(self):
         await self.bot.wait_until_ready()
-        # async for guild in self.bot.fetch_guilds(): #Uncomment once we update to
-        for guild in self.bot.guilds:
-            for loa in await self.config.guild(guild).loas():
-                time_diff = (
-                    datetime.datetime.fromtimestamp(loa["end_time"]) - datetime.datetime.utcnow()
-                )
-                seconds = max(0, time_diff.total_seconds())
-                user = self.bot.get_user(loa["authorID"])
-                channel = self.bot.get_channel(loa["ctxChannelID"])
-                loaChannel = self.bot.get_channel(await self.config.guild(guild).loaChannel())
-                try:
-                    message = await loaChannel.fetch_message(loa["messageID"])
-                except discord.NotFound:  # If LOA not found in LoaChannel, assume it was deleted by management and end LOA.
-                    await self.cancelLOA(guild, loa)
-                    continue
-                self.futures.append(
-                    asyncio.ensure_future(
-                        self.remind_loa_ended(user, channel, message, seconds, loa)
+        async for guild in self.bot.fetch_guilds(): #Uncomment once we update to
+            for guild in self.bot.guilds:
+                for loa in await self.config.guild(guild).loas():
+                    time_diff = (
+                        datetime.datetime.fromtimestamp(loa["end_time"]) - datetime.datetime.utcnow()
                     )
-                )
-            for loa in await self.config.guild(guild).scheduledLoas():
-                user = self.bot.get_user(loa["authorID"])
-                ctx = self.bot.get_channel(loa["ctxChannelID"])
-                start_time = datetime.datetime.fromtimestamp(loa["start_time"])
-                delay = int((start_time - datetime.datetime.utcnow()).total_seconds())
-                self.futures.append(asyncio.ensure_future(self.startLOA(ctx, user, delay, loa)))
+                    seconds = max(0, time_diff.total_seconds())
+                    user = self.bot.get_user(loa["authorID"])
+                    channel = self.bot.get_channel(loa["ctxChannelID"])
+                    loaChannel = self.bot.get_channel(await self.config.guild(guild).loaChannel())
+                    try:
+                        message = await loaChannel.fetch_message(loa["messageID"])
+                    except discord.NotFound:  # If LOA not found in LoaChannel, assume it was deleted by management and end LOA.
+                        await self.cancelLOA(guild, loa)
+                        continue
+                    self.futures.append(
+                        asyncio.ensure_future(
+                            self.remind_loa_ended(user, channel, message, seconds, loa)
+                        )
+                    )
+                for loa in await self.config.guild(guild).scheduledLoas():
+                    user = self.bot.get_user(loa["authorID"])
+                    ctx = self.bot.get_channel(loa["ctxChannelID"])
+                    start_time = datetime.datetime.fromtimestamp(loa["start_time"])
+                    delay = int((start_time - datetime.datetime.utcnow()).total_seconds())
+                    self.futures.append(asyncio.ensure_future(self.startLOA(ctx, user, delay, loa)))
 
     async def cleanup_tasks(self):
         for future in self.futures:
